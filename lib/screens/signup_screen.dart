@@ -34,35 +34,88 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String pass = passwordController.text.trim();
     String confirm = confirmPasswordController.text.trim();
 
-    // ▢ Empty fields
+    // Empty fields
     if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please fill in all fields")));
-      return;
-    }
-
-    // ▢ Valid email format
-    if (!email.contains("@") || !email.contains(".")) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please enter a valid email")));
-      return;
-    }
-
-    // ▢ Minimum password length
-    if (pass.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Password must be at least 6 characters")),
+        SnackBar(
+          backgroundColor: Colors.white,
+          content: Text(
+            "Please fill in all fields",
+            style: TextStyle(color: Colors.black),
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 20, left: 16, right: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Valid email format
+    if (!email.contains("@") || !email.contains(".")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.white,
+          content: Text(
+            "Please enter a valid email",
+            style: TextStyle(color: Colors.black),
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 20, left: 16, right: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Minimum password length
+    final password = passwordController.text.trim();
+
+    // REGEX: At least 6 chars, 1 uppercase letter, 1 number
+    final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{6,}$');
+
+    if (!regex.hasMatch(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.white,
+          content: Text(
+            "Password must be 6+ characters, with 1 capital letter and 1 number",
+            style: TextStyle(color: Colors.black),
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 20, left: 16, right: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 3),
+        ),
       );
       return;
     }
 
     // ▢ Match passwords
     if (pass != confirm) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Passwords do not match")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.white,
+          content: Text(
+            "Passwords do not match",
+            style: TextStyle(color: Colors.black),
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(bottom: 20, left: 16, right: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
       return;
     }
 

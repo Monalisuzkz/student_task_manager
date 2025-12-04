@@ -17,78 +17,74 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscurePassword = true;
 
-  Future<void> login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+ Future<void> login() async {
+  String email = emailController.text.trim();
+  String password = passwordController.text.trim();
 
-    // ▢ Empty fields
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please fill in all fields")));
-      return;
-    }
-
-    // ▢ Email format check
-    if (!email.contains("@") || !email.contains(".")) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please enter a valid email")));
-      return;
-    }
-
-    // ▢ Minimum password length
-    if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Password must be at least 6 characters")),
-      );
-      return;
-    }
-
-    try {
-      await auth.signInWithEmailAndPassword(email: email, password: password);
-
-      // SUCCESS DIALOG
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: Text(
-              "Login Successful!",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo,
-              ),
-            ),
-            content: Text("Welcome!", textAlign: TextAlign.center),
-            actions: [
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => DashboardScreen()),
-                    );
-                  },
-                  child: Text("Continue"),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Invalid email or password")));
-    }
+  if (email.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.white,
+        content: Text("Please fill in all fields",
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
+    );
+    return;
   }
+
+  if (!email.contains("@") || !email.contains(".")) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.white,
+        content: Text("Please enter a valid email",
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
+    );
+    return;
+  }
+
+  try {
+    await auth.signInWithEmailAndPassword(email: email, password: password);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Login Successful!",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
+          content: Text("Welcome!", textAlign: TextAlign.center),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => DashboardScreen()),
+                  );
+                },
+                child: Text("Continue"),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.white,
+        content: Text("Invalid email or password",
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {

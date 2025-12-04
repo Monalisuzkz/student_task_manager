@@ -26,7 +26,6 @@ class DeleteHistoryScreen extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
 
-          // ⭐ Improved button layout
           actionsPadding: EdgeInsets.all(12),
           actions: [
             Row(
@@ -69,7 +68,7 @@ class DeleteHistoryScreen extends StatelessWidget {
 
     if (confirm != true) return;
 
-    // 🔥 DELETE ALL deleted_tasks
+    // DELETE / CLEAR ALL deleted_tasks
     final snapshot = await FirebaseFirestore.instance
         .collection("users")
         .doc(user!.uid)
@@ -79,7 +78,6 @@ class DeleteHistoryScreen extends StatelessWidget {
     for (var doc in snapshot.docs) {
       await doc.reference.delete();
     }
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.white,
@@ -160,7 +158,6 @@ class DeleteHistoryScreen extends StatelessWidget {
                     ),
 
                     SizedBox(height: 5),
-
                     // DELETED DATE
                     Text(
                       "Deleted: ${DateFormat('MMM d, yyyy – h:mm a').format(data['deletedAt'].toDate())}",
@@ -220,7 +217,7 @@ class DeleteHistoryScreen extends StatelessWidget {
                           label: Text("Restore"),
                         ),
 
-                        // DELETE FOREVER BUTTON
+                        // DELETE BUTTON
                         TextButton.icon(
                           onPressed: () async {
                             await FirebaseFirestore.instance

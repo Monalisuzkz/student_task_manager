@@ -15,6 +15,98 @@ class DashboardScreen extends StatefulWidget {
 }
 
 bool showCalendar = true;
+Route _createRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.ease;
+
+      final tween = Tween(
+        begin: begin,
+        end: end,
+      ).chain(CurveTween(curve: curve));
+
+      return SlideTransition(position: animation.drive(tween), child: child);
+    },
+  );
+}
+
+class ScaleTransitionDialog extends StatefulWidget {
+  const ScaleTransitionDialog({super.key});
+
+  @override
+  ScaleTransitionDialogState createState() => ScaleTransitionDialogState();
+}
+
+class ScaleTransitionDialogState extends State<ScaleTransitionDialog>
+    with SingleTickerProviderStateMixin {
+  
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 250),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 48),
+            SizedBox(height: 10),
+            Text(
+              "Task Added!",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          "Your new task has been added successfully.",
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF0C2D83),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 Map<DateTime, List<Map<String, dynamic>>> taskEvents = {};
 final Map<String, Color> priorityColors = {
@@ -37,7 +129,8 @@ Widget _chip(String text, Color bg, Color color) {
   );
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   final taskController = TextEditingController();
   final user = FirebaseAuth.instance.currentUser;
 
@@ -230,7 +323,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     : null,
                               });
 
-                          Navigator.pop(context);
+                          Navigator.pop(context); // close add-task dialog
+
+                          // Delay to allow dialog closing animation
+                          Future.delayed(Duration(milliseconds: 10), () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => ScaleTransitionDialog(),
+                            );
+                          });
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF0C2D83),
@@ -662,17 +763,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             offset: Offset(0, kToolbarHeight),
             onSelected: (value) {
               if (value == "profile") {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ProfileScreen()),
-                );
+                Navigator.push(context, _createRoute(ProfileScreen()));
               } else if (value == "logout") {
                 _showLogoutDialog();
               } else if (value == "history") {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => DeleteHistoryScreen()),
-                );
+                Navigator.push(context, _createRoute(DeleteHistoryScreen()));
               }
             },
             itemBuilder: (context) => [
@@ -804,84 +899,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // =====================
               //   CALENDAR CARD UI
               // =====================
-              if (showCalendar)
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-
-                  child: TableCalendar(
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2035, 12, 31),
-                    focusedDay: _focusedDay,
-                    calendarFormat: _calendarFormat,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-
-                    eventLoader: (day) {
-                      final key = DateTime(day.year, day.month, day.day);
-                      return taskEvents[key] ?? [];
-                    },
-
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: Color(0xFF0C2D83),
-                        shape: BoxShape.circle,
-                      ),
-                      selectedDecoration: BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-
-                    calendarBuilders: CalendarBuilders(
-                      markerBuilder: (context, day, events) {
-                        if (events.isEmpty) return SizedBox();
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: events.take(3).map((event) {
-                            final task = event as Map<String, dynamic>;
-                            final priority = task["priority"] ?? "Low";
-
-                            Color dotColor = priority == "High"
-                                ? Colors.red
-                                : priority == "Medium"
-                                ? Colors.orange
-                                : Colors.blue;
-
-                            return Container(
-                              margin: EdgeInsets.symmetric(horizontal: 2),
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: dotColor,
-                                shape: BoxShape.circle,
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-
-                    onDaySelected: (day, focusedDay) {
-                      setState(() {
-                        _selectedDay = day;
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                  ),
-                ),
-
+              AnimatedSize(
+                duration: Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: showCalendar
+                    ? Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: TableCalendar(
+                          firstDay: DateTime.utc(2020, 1, 1),
+                          lastDay: DateTime.utc(2035, 12, 31),
+                          focusedDay: _focusedDay,
+                          calendarFormat: _calendarFormat,
+                          selectedDayPredicate: (day) =>
+                              isSameDay(_selectedDay, day),
+                          eventLoader: (day) {
+                            final key = DateTime(day.year, day.month, day.day);
+                            return taskEvents[key] ?? [];
+                          },
+                          calendarStyle: CalendarStyle(
+                            todayDecoration: BoxDecoration(
+                              color: Color(0xFF0C2D83),
+                              shape: BoxShape.circle,
+                            ),
+                            selectedDecoration: BoxDecoration(
+                              color: Colors.orange,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          calendarBuilders: CalendarBuilders(
+                            markerBuilder: (context, day, events) {
+                              if (events.isEmpty) return SizedBox();
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: events.take(3).map((event) {
+                                  final task = event as Map<String, dynamic>;
+                                  final priority = task["priority"] ?? "Low";
+                                  Color dotColor = priority == "High"
+                                      ? Colors.red
+                                      : priority == "Medium"
+                                      ? Colors.orange
+                                      : Colors.blue;
+                                  return Container(
+                                    margin: EdgeInsets.symmetric(horizontal: 2),
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: dotColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          ),
+                          onDaySelected: (day, focusedDay) {
+                            setState(() {
+                              _selectedDay = day;
+                              _focusedDay = focusedDay;
+                            });
+                          },
+                        ),
+                      )
+                    : SizedBox(), // collapsed sta
+              ),
               SizedBox(height: 20),
-
               // =====================
               //   TASK LIST (scrollable)
               // =====================
